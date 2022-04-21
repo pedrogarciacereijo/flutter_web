@@ -41,9 +41,9 @@ class Admin {
  List<Map<String, dynamic>>? alumnoList(List<Usuario> alumnos) {
     
     final alumnoMap = <Map<String, dynamic>>[];
-    alumnos.forEach((alumno) {
+    for (var alumno in alumnos) {
       alumnoMap.add(alumno.toJson());
-    });
+    }
     return alumnoMap;
   }
 

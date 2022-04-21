@@ -2,9 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web/models/usuario.dart';
 
 import '../../models/admin.dart';
 import '../../models/firestore.dart';
+import 'charts.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -14,6 +16,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late Future<List<Usuario>> _listaAlumnos;
+
+  initState(){
+    super.initState();
+    _listaAlumnos = FirestoreHelper().getAlumnos();
+  }
 
   DateTime pre_backpress = DateTime.now();
 
@@ -32,6 +40,22 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  List<DropdownMenuItem<String>> _createList(List<Usuario> list){
+    print("Creating List");
+    
+    List<DropdownMenuItem<String>> result = [];
+    for (var alumno in list){
+      result.add(
+        DropdownMenuItem(
+          value: alumno.referenceId,
+          child: Text(alumno.nombre),
+        )
+      ) ;
+      print(alumno.toJson());
+    }
+    return result;
+  }
+
   List<DropdownMenuItem<String>> getDropdownItems(){
     List<DropdownMenuItem<String>> menuItems = [
       DropdownMenuItem(child: Text('Pedro'),value: 'q4nyjBKcUKglnrvobR4pqfGmQpm2'),
@@ -41,31 +65,18 @@ class _HomePageState extends State<HomePage> {
     return menuItems;
   }
 
-  final list = FirestoreHelper().getAlumnos();
-  
-  String dropdownValue = "";
-
-  List<DropdownMenuItem<String>> _createList() {
-    return list
-        .map<DropdownMenuItem<String>>(
-          (e) => DropdownMenuItem(
-            value: e.referenceId,
-            child: Text(e.nombre),
-          ),
-        )
-        .toList();
-  }
-
   String? _selectedItem;
-  Widget _withHint() {
+  Widget _withHint(List<Usuario> list){
+    List<DropdownMenuItem<String>> items = getDropdownItems();
     final dropdown = DropdownButton(
-      items: _createList(),
-      hint: Text("Choose an item"),
+      items: items,
+      hint: Text("Elige un alumno"),
       value: _selectedItem,
       onChanged: (String? value) => setState(() {
         _selectedItem = value ?? "";
       }),
     );
+    print("object");
     return dropdown;
   }
   
@@ -101,8 +112,50 @@ class _HomePageState extends State<HomePage> {
                       SizedBox(height: 25.0),
                       Column(
                         children: [
-                            _withHint()
-                            //TextButton(onPressed: onPressed, child: child)
+                          FutureBuilder(
+                            future: _listaAlumnos,
+                            builder: (
+                              BuildContext context,
+                              AsyncSnapshot<List<Usuario>> snapshot,
+                            ) {
+                              if (snapshot.connectionState == ConnectionState.waiting) { 
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircularProgressIndicator(),
+                                    Visibility(
+                                      visible: snapshot.hasData,
+                                      child: Text(
+                                        "snapshot.data",
+                                        style: const TextStyle(color: Colors.black, fontSize: 24),
+                                      ),
+                                    )
+                                  ],
+                                );
+                              } else if (snapshot.connectionState == ConnectionState.done) {
+                                if (snapshot.hasError) {
+                                  return const Text('Error');
+                                } else if (snapshot.hasData) {
+                                  return _withHint(snapshot.data!);
+                                } else {
+                                  return const Text('Empty data');
+                                }
+                              } else {
+                                return Text('State: ${snapshot.connectionState}');
+                              }
+                            },
+                          ),
+                            
+                            TextButton(
+                              onPressed: (){
+                                Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Charts(referenceId: 'q4nyjBKcUKglnrvobR4pqfGmQpm2')
+                                )
+                              );
+                              }, child: Text("Ver datos"))
                           ]
                       ),
                     ],

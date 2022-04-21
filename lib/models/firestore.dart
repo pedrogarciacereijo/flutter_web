@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_web/models/usuario.dart';
 //Import the Admin model
 import '../models/admin.dart';
+import 'ejercicio.dart';
 
 class FirestoreHelper{
   // Create a CollectionReference called admins that references the firestore collection
@@ -24,7 +25,7 @@ class FirestoreHelper{
 
   }
 
-  List<Usuario> getAlumnos(){
+  Future<List<Usuario>> getAlumnos() async{
     List<Usuario> listaAlumnos = [];
     List<dynamic> alumnosMap = [];
     admins.doc((FirebaseAuth.instance.currentUser)?.uid).get().then((DocumentSnapshot documentSnapshot) {
@@ -33,10 +34,34 @@ class FirestoreHelper{
         print('Document exists on the database');
         alumnosMap = data['alumnos'];
         listaAlumnos = convertAlumnos(alumnosMap);
+        for (var alumno in listaAlumnos){
+          print(alumno.toString());
+        }
       }
     });
     return listaAlumnos;
 
+  }
+
+  Future<List<Ejercicio>> getEjercicios(String referenceId) async {
+    List<Ejercicio> listaEjercicios = [];
+    Ejercicio ejercicio;
+    await ejercicios.where('idUsuario', isEqualTo: referenceId).get().then((QuerySnapshot querySnapshot) {
+      for (var doc in querySnapshot.docs) {
+            print(doc.id);
+            ejercicio = Ejercicio(doc.get('idUsuario'), 
+                    dateInicio: DateTime.parse(doc.get('dateInicio').toDate().toString()), dateFin: DateTime.parse(doc.get('dateFin').toDate().toString()), 
+                    tipoEjercicio: doc.get('tipoEjercicio'), dificultad: doc.get('dificultad'),
+                    errores: doc.get('errores'), aciertos: doc.get('aciertos'), letrasCorrectas: doc.get('letrasCorrectas'));
+
+            print("Ejercicio " + ejercicio.idUsuario + 
+            ejercicio.dateInicio.toString() + ejercicio.dateFin.toString() + 
+            ejercicio.tipoEjercicio + ejercicio.dificultad! + ejercicio.errores.toString() + ejercicio.aciertos.toString() + ejercicio.letrasCorrectas.toString());
+            listaEjercicios.add(ejercicio);
+        }
+    });
+
+    return listaEjercicios;
   }
 
 
