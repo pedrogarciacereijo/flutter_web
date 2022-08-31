@@ -6,7 +6,8 @@ import 'package:flutter_web/models/usuario.dart';
 import 'package:flutter_web/ui/screens/vistaAlumnos.dart';
 
 import '../../models/admin.dart';
-import '../../models/firestore.dart';
+import '../../controler/firestore.dart';
+import '../../textos.dart';
 import 'charts.dart';
 
 class HomePage extends StatefulWidget {
@@ -23,31 +24,35 @@ class _HomePageState extends State<HomePage> {
 
   DateTime pre_backpress = DateTime.now();
 
-  
-  Widget _article(BuildContext context) {
+  Widget _alumnoListTile(Usuario alumno){
     return Padding(
       padding: EdgeInsets.all(10),
       child: Container(
-        color: Colors.cyanAccent,
-        child: Text(
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam elementum dolor eget lorem euismod rutrum.',
-          style: TextStyle(fontSize: 30),
+        color: Colors.white10,
+        child: ListTile(
+          contentPadding: EdgeInsets.all(5),
+          dense: true,
+          onTap: () async {
+
+          },
+          //leading: Icon.user,
+          title: Text(
+            alumno.nombre + " " + alumno.apellidos,
+            style: TextStyle(fontSize: 20),
+          ),
+          subtitle: Text(alumno.apellidos),
         ),
       ),
     );
   }
-}
-
-  List<DropdownMenuItem<String>> _createList(List<Usuario> list){
+  
+  List<Widget> _createList(List<Usuario> list){
     print("Creating List");
     
-    List<DropdownMenuItem<String>> result = [];
+    List<Widget> result = [];
     for (var alumno in list){
       result.add(
-        DropdownMenuItem(
-          value: alumno.referenceId,
-          child: Text(alumno.nombre),
-        )
+        _alumnoListTile(alumno)
       ) ;
       print(alumno.toJson());
     }
@@ -55,22 +60,18 @@ class _HomePageState extends State<HomePage> {
     return result;
   }
 
-  
-
-  String? _selectedItemUsuario;
-  Widget _dropdownUsuario(List<Usuario> list){
-    List<DropdownMenuItem<String>> items = _createList(list);
-    final dropdown = DropdownButton(
-      items: items,
-      hint: Text("Elige un alumno"),
-      value: _selectedItemUsuario,
-      onChanged: (String? value) => setState(() {
-        _selectedItemUsuario = value ?? "";
-      }),
+  Widget _vistaAlumnos(List<Usuario> list){
+    List<Widget> items = _createList(list);
+    return Scaffold(
+      body: Container(
+        child: ListView(
+          padding: const EdgeInsets.all(8),
+          children: items
+        )
+      ),
     );
-    print("DropdownButton creado");
-    return dropdown;
   }
+
 
   int? _selectedItemTiempo;
   Widget _dropdownTiempo(){
@@ -95,6 +96,33 @@ class _HomePageState extends State<HomePage> {
       value: _selectedItemTiempo,
       onChanged: (int? value) => setState(() {
         _selectedItemTiempo = value ?? 1;
+      }),
+    );
+    return dropdown;
+  }
+
+  int? _selectedItemDificultad;
+  Widget _dropdownDificultad(){
+    List<DropdownMenuItem<int>> items = [
+      DropdownMenuItem(
+          value: 1,
+          child: Text('Fácil'),
+      ),
+      DropdownMenuItem(
+          value: 3,
+          child: Text('Normal'),
+      ),
+      DropdownMenuItem(
+          value: 6,
+          child: Text('Díficil'),
+      )
+    ];
+    final dropdown = DropdownButton(
+      items: items,
+      hint: Text("Elige la dificultad"),
+      value: _selectedItemDificultad,
+      onChanged: (int? value) => setState(() {
+        _selectedItemDificultad = value ?? 1;
       }),
     );
     return dropdown;
@@ -128,7 +156,7 @@ class _HomePageState extends State<HomePage> {
     return AlertDialog(
       title: Text('Faltan datos'),
       content:
-          Text("Elige un alumno, un periodo de tiempo y un ejercicio antes de continuar"),
+          Text("Elige una dificultad, un periodo de tiempo y un ejercicio antes de continuar"),
       actions: <Widget>[
         TextButton(
             child: Text("Aceptar"),
@@ -157,82 +185,53 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
 
-    
-    return WillPopScope(
-        onWillPop: onWillPop,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.blueGrey, Colors.blueGrey.shade900],
-                stops: [0.8, 1.0]),
-          ),
-          child: Scaffold(
-              backgroundColor: Colors.transparent,
-              body: Stack(
-                children: <Widget>[
-                  ListView(
-                    children: <Widget>[
-                      SizedBox(height: 30.0),
-                      Text(
-                        "ELIGE UN ALUMNO PARA CONSULTAR SUS DATOS",
-                        style: TextStyle(
-                            fontFamily: "Comix-Loud",
-                            color: Colors.white,
-                            fontSize: 15.0),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 25.0),
-                      Column(
-                        children: [
-                          FutureBuilder<List<Usuario>>(
-                            future: data,
-                            builder: (context, snapshot) {
-                              switch (snapshot.connectionState) {
-                                case ConnectionState.none:
-                                  return Text('Press button to start.');
-                                case ConnectionState.active:
-                                case ConnectionState.waiting:
-                                  return Text('Awaiting result...');
-                                case ConnectionState.done:
-                                  if (snapshot.hasError){
-                                    return Text('Error: ${snapshot.error}');
-                                  }
-                                    
-                                  return _dropdownUsuario(snapshot.data!);
-                              }
-                            },
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _dropdownTiempo(),
-                              _dropdownTipo()
-                            ]
-                          ),
-                          TextButton(
-                            onPressed: (){
-                              if((_selectedItemUsuario == null)||(_selectedItemTiempo == null)||(_selectedItemTipo == null)){
-                                _showMyDialog(context);
-                              } else {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Charts(referenceId: _selectedItemUsuario!, meses:  _selectedItemTiempo!, tipoEjercicio: _selectedItemTipo!)
-                                  )
-                                );
-                              }
-                              
-                            }, child: Text("Ver datos")
-                          )
-                        ]
-                      ),
-                    ],
-                  ),
-                ],
-              )),
+    return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.blueGrey, Colors.blueGrey.shade900],
+              stops: [0.8, 1.0]),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: Scaffold(
+                backgroundColor: Colors.transparent,
+                body: Center(
+                  child: Text(Textos.mensajeBienvenida ),
+                  )
+              )
+            ),
+            Expanded(
+              flex: 1,
+              child: Scaffold(
+                backgroundColor: Colors.transparent,
+                body: Center(
+                  child: FutureBuilder<List<Usuario>>(
+                              future: data,
+                              builder: (context, snapshot) {
+                                switch (snapshot.connectionState) {
+                                  case ConnectionState.none:
+                                    return Center(child: Text('Press button to start.'),);
+                                  case ConnectionState.active:
+                                  case ConnectionState.waiting:
+                                    return Center(child: Text('Awaiting result...'),);
+                                  case ConnectionState.done:
+                                    if (snapshot.hasError){
+                                      return Center(child: Text('Error: ${snapshot.error}'));
+                                    }
+                                      
+                                    return _vistaAlumnos(snapshot.data!);
+                                }
+                              }, 
+                    ),
+                  )
+              )
+            )
+          ], 
         )
-    );
+      );
   }
 }

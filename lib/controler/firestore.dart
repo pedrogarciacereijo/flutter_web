@@ -1,14 +1,18 @@
 // Import the firebase_core and cloud_firestore plugin
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_web/models/usuario.dart';
-//Import the Admin model
+
+//Import the models
 import '../models/admin.dart';
-import 'ejercicio.dart';
+import '../models/ejercicio.dart';
+import '../models/usuario.dart';
 
 class FirestoreHelper{
   // Create a CollectionReference called admins that references the firestore collection
   final CollectionReference admins = FirebaseFirestore.instance.collection('admins');
+
+  // Create a CollectionReference called users that references the firestore collection
+  final CollectionReference users = FirebaseFirestore.instance.collection('usuarios');
 
   // Create a CollectionReference called ejercicios that references the firestore collection
   final CollectionReference ejercicios = FirebaseFirestore.instance.collection('ejercicios');
@@ -30,24 +34,38 @@ class FirestoreHelper{
   }
 
   Future<List<Usuario>> getAlumnos() async{
-    List<Usuario> listaAlumnos = [];
+    List<dynamic> listaCorreos = [];
     List<dynamic> alumnosMap = [];
-   
+    List<Usuario> listaAlumnos = [];
+    
     final uid = (FirebaseAuth.instance.currentUser)?.uid;
 
     print("Buscando alumnos pertenecientes a al profesor" );
     
     await admins.where('referenceId', isEqualTo: uid).limit(1).get().then((QuerySnapshot querySnapshot) {
-      print('Document exists on the database');
+      print('El profesor existe en la base de datos');
       for (var doc in querySnapshot.docs) {
-        alumnosMap = doc.get('alumnos');
-        listaAlumnos = convertAlumnos(alumnosMap);
-        print("Lista de alumnos:");
-        for (var alumno in listaAlumnos){
-          print(alumno.toString());
-        }
+        listaCorreos = doc.get('alumnos');
+        
+        print("Lista de correos de alumnos bajo supervisión del profesor actual:");
+        
+        for (var correo in listaCorreos){
+          print(correo.toString());
+        } 
+        
       } 
     });
+    for (var correo in listaCorreos){
+          await users.where('email', isEqualTo: correo).limit(1).get().then((QuerySnapshot querySnapshot) {
+            print('El alumno con correo ' + correo + ' existe en la base de datos');
+            for (var doc in querySnapshot.docs) {
+              Usuario alumno = convertAlumno(doc.data());
+              print(alumno.toString());
+              listaAlumnos.add(alumno);
+            } 
+          });
+    }
+    
 
     return listaAlumnos;
 

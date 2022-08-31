@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web/models/firestore.dart';
+import 'package:flutter_web/controler/firestore.dart';
 import '../../models/ejercicio.dart';
 import 'graficos/default_line_chart.dart';
 
