@@ -5,8 +5,9 @@ class Admin {
   String nombre;
   String email;
   List<Usuario> alumnos;
+  String referenceId; 
 
-  Admin({required this.nombre,required this.email, required this.alumnos});
+  Admin({required this.nombre,required this.email, required this.alumnos, required this.referenceId});
 
   factory Admin.fromJson(Map<String, dynamic> json) => _adminFromJson(json);
 
@@ -20,13 +21,15 @@ class Admin {
     return Admin(
         nombre: json['nombre'] as String,
         email: json['email'] as String,
-        alumnos: convertAlumnos(json['alumnos'] as List<dynamic>));
+        alumnos: convertAlumnos(json['alumnos'] as List<dynamic>),
+        referenceId: json['referenceId'] as String);
   }
 
   Map<String, dynamic> _adminToJson(Admin instance) => <String, dynamic>{
     'nombre': instance.nombre,
     'email': instance.email,
     'alumnos': alumnoList(instance.alumnos),
+    'referenceId': instance.referenceId
   };
 
   List<Usuario> convertAlumnos(List<dynamic> alumnoMap) {
@@ -46,13 +49,3 @@ class Admin {
     }
     return alumnoMap;
   }
-
-  /* List<String>? alumnoListToString(List<Usuario> alumnos){
-    if (alumnos == null) {
-      return null;
-    }
-    final nombres = <String>[];
-    for (final alumno in alumnos) {
-      nombres.add(alumno.toJson()['nombre']);
-    }
-  }*/

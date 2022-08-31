@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web/models/authentication.dart';
 import 'package:flutter_web/models/firestore.dart';
@@ -96,7 +97,7 @@ class _RegistrarseScreenState extends State<RegistrarseScreen>{
               if (result == null) {
               //Create user inside the collections
                 if (_nombre.text != null && _email.text != null && _password.text != null) {
-                  final newAdmin = Admin(nombre: _nombre.text, email: _email.text, alumnos: []);
+                  final newAdmin = Admin(nombre: _nombre.text, email: _email.text, alumnos: [], referenceId: (FirebaseAuth.instance.currentUser)!.uid);
                   FirestoreHelper().addAdmin(newAdmin);
                 }
 

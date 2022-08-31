@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_web/models/firestore.dart';
 import '../../models/ejercicio.dart';
-import 'ejercicio_chart.dart';
+import 'graficos/default_line_chart.dart';
 
 class Charts extends StatefulWidget {
-  final referenceId;
+  final String referenceId;
+  final int meses;
+  final String tipoEjercicio;
 
-  const Charts({Key? key, this.referenceId}) : super(key: key);
+  const Charts({Key? key, required this.referenceId, required this.meses, required this.tipoEjercicio}) : super(key: key);
   
   @override
   _ChartsState createState() => _ChartsState();
@@ -18,7 +20,7 @@ class _ChartsState extends State<Charts> {
   
   initState(){
     super.initState();
-    data = FirestoreHelper().getEjercicios(widget.referenceId);
+    data = FirestoreHelper().getEjerciciosParametros(widget.referenceId, widget.tipoEjercicio, widget.meses);
   }
   
 
@@ -26,6 +28,9 @@ class _ChartsState extends State<Charts> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        
+      ),
       body: Center(
         child: FutureBuilder<List<Ejercicio>>(
           future: data,
@@ -39,7 +44,7 @@ class _ChartsState extends State<Charts> {
               case ConnectionState.done:
                 if (snapshot.hasError)
                   return Text('Error: ${snapshot.error}');
-                return EjercicioChart(data: snapshot.data!);
+                return SyncfusionChart(data: snapshot.data!);
             }
           }
         )

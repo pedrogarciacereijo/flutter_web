@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web/models/usuario.dart';
+import 'package:flutter_web/ui/screens/vistaAlumnos.dart';
 
 import '../../models/admin.dart';
 import '../../models/firestore.dart';
@@ -16,29 +17,26 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Future<List<Usuario>> _listaAlumnos;
 
-  initState(){
-    super.initState();
-    _listaAlumnos = FirestoreHelper().getAlumnos();
-  }
+  late final Future<List<Usuario>> data;
+  late final List<Usuario> data2;
 
   DateTime pre_backpress = DateTime.now();
 
-  Future<bool> onWillPop() async{
-    final timegap = DateTime.now().difference(pre_backpress);
-    final cantExit = timegap >= Duration(seconds: 2);
-    pre_backpress = DateTime.now();
-    if(cantExit){
-      //show snackbar
-      final snack = SnackBar(content: Text('Press Back button again to Exit'),duration: Duration(seconds: 2),);
-      ScaffoldMessenger.of(context).showSnackBar(snack);
-      return false; // false will do nothing when back press
-    }else{
-      SystemNavigator.pop();
-      return true;   // true will exit the app
-    }
+  
+  Widget _article(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(10),
+      child: Container(
+        color: Colors.cyanAccent,
+        child: Text(
+          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam elementum dolor eget lorem euismod rutrum.',
+          style: TextStyle(fontSize: 30),
+        ),
+      ),
+    );
   }
+}
 
   List<DropdownMenuItem<String>> _createList(List<Usuario> list){
     print("Creating List");
@@ -53,37 +51,113 @@ class _HomePageState extends State<HomePage> {
       ) ;
       print(alumno.toJson());
     }
+    print('Lista de alumnos creada');
     return result;
   }
 
-  List<DropdownMenuItem<String>> getDropdownItems(){
-    List<DropdownMenuItem<String>> menuItems = [
-      DropdownMenuItem(child: Text('Pedro'),value: 'q4nyjBKcUKglnrvobR4pqfGmQpm2'),
-      DropdownMenuItem(child: Text('Ejemplo1'),value: '1'),
-      DropdownMenuItem(child: Text('Ejemplo2'),value: '2'),
-    ];
-    return menuItems;
-  }
+  
 
-  String? _selectedItem;
-  Widget _withHint(List<Usuario> list){
-    List<DropdownMenuItem<String>> items = getDropdownItems();
+  String? _selectedItemUsuario;
+  Widget _dropdownUsuario(List<Usuario> list){
+    List<DropdownMenuItem<String>> items = _createList(list);
     final dropdown = DropdownButton(
       items: items,
       hint: Text("Elige un alumno"),
-      value: _selectedItem,
+      value: _selectedItemUsuario,
       onChanged: (String? value) => setState(() {
-        _selectedItem = value ?? "";
+        _selectedItemUsuario = value ?? "";
       }),
     );
-    print("object");
+    print("DropdownButton creado");
     return dropdown;
   }
+
+  int? _selectedItemTiempo;
+  Widget _dropdownTiempo(){
+    List<DropdownMenuItem<int>> items = [
+      DropdownMenuItem(
+          value: 1,
+          child: Text('Último mes'),
+      ),
+      DropdownMenuItem(
+          value: 3,
+          child: Text('Últimos 3 meses'),
+      ),
+      DropdownMenuItem(
+          value: 6,
+          child: Text('Últimos 6 meses'),
+      )
+
+    ];
+    final dropdown = DropdownButton(
+      items: items,
+      hint: Text("Elige el tiempo"),
+      value: _selectedItemTiempo,
+      onChanged: (int? value) => setState(() {
+        _selectedItemTiempo = value ?? 1;
+      }),
+    );
+    return dropdown;
+  }
+
+  String? _selectedItemTipo;
+  Widget _dropdownTipo(){
+    List<DropdownMenuItem<String>> items = [
+      DropdownMenuItem(
+          value: 'ejercicioLetras',
+          child: Text('Diferenciar Letras'),
+      ),
+      DropdownMenuItem(
+          value: 'ejercicioDesplazamiento',
+          child: Text('Encontrar con Desplazamiento'),
+      )
+
+    ];
+    final dropdown = DropdownButton(
+      items: items,
+      hint: Text("Elige el tipo de ejercicio"),
+      value: _selectedItemTipo,
+      onChanged: (String? value) => setState(() {
+        _selectedItemTipo = value ?? "";
+      }),
+    );
+    return dropdown;
+  }
+
+  Widget _buildAlertDialog() {
+    return AlertDialog(
+      title: Text('Faltan datos'),
+      content:
+          Text("Elige un alumno, un periodo de tiempo y un ejercicio antes de continuar"),
+      actions: <Widget>[
+        TextButton(
+            child: Text("Aceptar"),
+            onPressed: () {
+              Navigator.of(context).pop();
+            }),
+      ],
+    );
+  }
+
+  Future<void> _showMyDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      builder: (_) => _buildAlertDialog(),
+    );
+  }
+
+  
+  initState() {
+    super.initState();
+    data = FirestoreHelper().getAlumnos();
+  }
+
   
 
   @override
   Widget build(BuildContext context) {
 
+    
     return WillPopScope(
         onWillPop: onWillPop,
         child: Container(
@@ -112,51 +186,47 @@ class _HomePageState extends State<HomePage> {
                       SizedBox(height: 25.0),
                       Column(
                         children: [
-                          FutureBuilder(
-                            future: _listaAlumnos,
-                            builder: (
-                              BuildContext context,
-                              AsyncSnapshot<List<Usuario>> snapshot,
-                            ) {
-                              if (snapshot.connectionState == ConnectionState.waiting) { 
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    CircularProgressIndicator(),
-                                    Visibility(
-                                      visible: snapshot.hasData,
-                                      child: Text(
-                                        "snapshot.data",
-                                        style: const TextStyle(color: Colors.black, fontSize: 24),
-                                      ),
-                                    )
-                                  ],
-                                );
-                              } else if (snapshot.connectionState == ConnectionState.done) {
-                                if (snapshot.hasError) {
-                                  return const Text('Error');
-                                } else if (snapshot.hasData) {
-                                  return _withHint(snapshot.data!);
-                                } else {
-                                  return const Text('Empty data');
-                                }
-                              } else {
-                                return Text('State: ${snapshot.connectionState}');
+                          FutureBuilder<List<Usuario>>(
+                            future: data,
+                            builder: (context, snapshot) {
+                              switch (snapshot.connectionState) {
+                                case ConnectionState.none:
+                                  return Text('Press button to start.');
+                                case ConnectionState.active:
+                                case ConnectionState.waiting:
+                                  return Text('Awaiting result...');
+                                case ConnectionState.done:
+                                  if (snapshot.hasError){
+                                    return Text('Error: ${snapshot.error}');
+                                  }
+                                    
+                                  return _dropdownUsuario(snapshot.data!);
                               }
                             },
                           ),
-                            
-                            TextButton(
-                              onPressed: (){
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _dropdownTiempo(),
+                              _dropdownTipo()
+                            ]
+                          ),
+                          TextButton(
+                            onPressed: (){
+                              if((_selectedItemUsuario == null)||(_selectedItemTiempo == null)||(_selectedItemTipo == null)){
+                                _showMyDialog(context);
+                              } else {
                                 Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => Charts(referenceId: 'q4nyjBKcUKglnrvobR4pqfGmQpm2')
-                                )
-                              );
-                              }, child: Text("Ver datos"))
-                          ]
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Charts(referenceId: _selectedItemUsuario!, meses:  _selectedItemTiempo!, tipoEjercicio: _selectedItemTipo!)
+                                  )
+                                );
+                              }
+                              
+                            }, child: Text("Ver datos")
+                          )
+                        ]
                       ),
                     ],
                   ),
