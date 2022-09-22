@@ -3,9 +3,8 @@ class Usuario {
   String nombre;
   String apellidos;
   String email;
-  String referenceId;
 
-  Usuario(this.nombre, this.apellidos, this.email, this.referenceId);
+  Usuario(this.nombre, this.apellidos, this.email);
 
   factory Usuario.fromJson(Map<String, dynamic> json) => _usuarioFromJson(json);
 
@@ -17,14 +16,13 @@ class Usuario {
 
   Usuario _usuarioFromJson(Map<String, dynamic> json) {
     return Usuario(json['nombre'] as String, json['apellidos'] as String,
-        json['email'] as String, json['referenceId'] as String);
+        json['email'] as String);
   }
 
   Map<String, dynamic> _usuarioToJson(Usuario instance) => <String, dynamic>{
     'nombre': instance.nombre,
     'apellidos': instance.apellidos,
     'email': instance.email,
-    'referenceId': instance.referenceId,
   };
 
   Usuario convertAlumno(dynamic alumno) {

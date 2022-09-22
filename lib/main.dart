@@ -1,7 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_web/ui/screens/vistas/vista_superadmin.dart';
 
-import 'ui/screens/home_page.dart';
+
+import 'ui/screens/vistas/home_page.dart';
 import 'ui/screens/autenticacion/iniciarSesion.dart';
 import 'ui/screens/autenticacion/registrarse.dart';
 import 'ui/screens/autenticacion/recuperarPassword.dart';
@@ -28,16 +31,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scrollBehavior: MaterialScrollBehavior().copyWith( dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse}, ),
       debugShowCheckedModeBanner: false,
       title: appTitle,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      //home: IniciarSesionScreen(),
       initialRoute: '/iniciarSesion',
       routes: {
-        '/homePage': (context) => HomePage(),
         '/iniciarSesion': (context) => IniciarSesionScreen(),
+        '/homePage': (context) => HomePage(),
+        '/vistaSuperadmin': (context) => VistaSuperadmin(),
         '/registrarse': (context) => RegistrarseScreen(),
         '/recuperarPassword': (context) => RecuperarPassword(),
       },
